@@ -31,6 +31,7 @@
     "autoprefixer": "^10.4.21",
     "cheerio": "^1.1.2",
     "dotenv": "^17.2.3",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.548.0",
     "next": "^16.0.0",
     "playwright": "^1.56.1",
@@ -39,9 +40,13 @@
     "prisma": "^6.18.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0",
     "tailwindcss": "^4.1.16",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3",
     "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.21"
   }
 }

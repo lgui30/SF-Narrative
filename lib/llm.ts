@@ -357,3 +357,115 @@ export async function summarizeWeeklyNewsWithRetry(
     `Failed to summarize ${category} news after ${maxRetries} attempts: ${lastError?.message}`
   );
 }
+
+/**
+ * Extract SF neighborhoods mentioned in a news article using LLM
+ * @param article - News article to analyze
+ * @returns Array of neighborhood names (defaults to ["General SF"] on error)
+ */
+export async function extractNeighborhoods(
+  article: NewsArticle
+): Promise<string[]> {
+  const apiKey = process.env.NOVITA_API_KEY;
+
+  if (!apiKey) {
+    console.warn('NOVITA_API_KEY not configured for neighborhood extraction');
+    return [];
+  }
+
+  // Improved prompt with better examples
+  const prompt = `Extract SPECIFIC San Francisco neighborhoods mentioned in this article.
+Return ONLY a JSON array of neighborhood names.
+If NO SPECIFIC neighborhood is mentioned, return empty array [].
+
+Examples:
+- Article about Mission District crime → ["Mission"]
+- Article about SOMA tech startup → ["South of Market"]
+- Article about Castro parade and Noe Valley shops → ["Castro/Upper Market", "Noe Valley"]
+- Article about general SF policy with no specific location → []
+
+SF Neighborhoods: Bayview, Bernal Heights, Castro/Upper Market, Chinatown,
+Crocker Amazon, Diamond Heights, Downtown/Civic Center, Excelsior, Financial District,
+Glen Park, Golden Gate Park, Haight Ashbury, Inner Richmond, Inner Sunset, Lakeshore,
+Marina, Mission, Nob Hill, Noe Valley, North Beach, Ocean View, Outer Mission,
+Outer Richmond, Outer Sunset, Pacific Heights, Parkside, Potrero Hill, Presidio,
+Presidio Heights, Russian Hill, Seacliff, South of Market, Treasure Island/YBI,
+Twin Peaks, Visitacion Valley, West of Twin Peaks, Western Addition
+
+Title: ${article.title}
+Snippet: ${article.snippet}
+
+JSON array:`;
+
+  // Retry logic - 2 attempts
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased to 15s
+
+      const response = await fetch('https://api.novita.ai/v3/openai/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-3.2-3b-instruct',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 150, // Increased from 100
+          temperature: 0.1,
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (attempt === 0) {
+          console.warn(`LLM API failed (attempt ${attempt + 1}/2), retrying...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
+          continue;
+        }
+        throw new Error('API failed after retries');
+      }
+
+      const data = await response.json();
+
+      if (!data.choices || data.choices.length === 0) {
+        throw new Error('No response from API');
+      }
+
+      const content = data.choices[0].message.content.trim();
+
+      let neighborhoods: string[];
+      try {
+        neighborhoods = JSON.parse(content);
+      } catch (parseError) {
+        // Try to extract JSON array from response
+        const jsonMatch = content.match(/\[(.*?)\]/);
+        if (jsonMatch) {
+          neighborhoods = JSON.parse(`[${jsonMatch[1]}]`);
+        } else {
+          throw parseError;
+        }
+      }
+
+      if (Array.isArray(neighborhoods) &&
+          neighborhoods.every(n => typeof n === 'string')) {
+        return neighborhoods.filter(n => n.length > 0);
+      }
+
+      return [];
+    } catch (error) {
+      if (attempt === 0) {
+        console.warn(`LLM extraction failed (attempt ${attempt + 1}/2):`, error);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+      console.error('LLM neighborhood extraction failed after retries:', error);
+      return [];
+    }
+  }
+
+  return [];
+}

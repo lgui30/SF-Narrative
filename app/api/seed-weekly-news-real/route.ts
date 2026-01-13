@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { fetchNewsWithFallback } from '@/lib/news-api';
+import { fetchNewsWithFallback, fetchNeighborhoodSpecificNews } from '@/lib/news-api';
 import type { NewsArticle, CategoryNews } from '@/lib/types';
 import { filterByStartDate } from '@/lib/news-aggregator';
+import { extractNeighborhoods } from '@/lib/llm';
+import { extractNeighborhoodsRuleBased } from '@/lib/neighborhood-matcher';
 
 /**
  * Seed endpoint to fetch REAL weekly news from NewsAPI + Google RSS
@@ -136,7 +138,7 @@ export async function GET(request: NextRequest) {
   Economy: ${filteredEconomy.length}
   SF Local: ${filteredSF.length}`);
 
-    if (filteredTech.length === 0 && filteredPolitics.length === 0 && 
+    if (filteredTech.length === 0 && filteredPolitics.length === 0 &&
         filteredEconomy.length === 0 && filteredSF.length === 0) {
       return NextResponse.json({
         success: false,
@@ -144,39 +146,102 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Fetch neighborhood-specific news
+    console.log('🏘️ Fetching neighborhood-specific news...');
+    const neighborhoodNews = await fetchNeighborhoodSpecificNews(fetchStartDate);
+
+    // Convert neighborhood news map to array of all articles with neighborhood tags
+    const neighborhoodArticles = Array.from(neighborhoodNews.values()).flat();
+    console.log(`✓ Got ${neighborhoodArticles.length} neighborhood-specific articles`);
+
+    // Merge neighborhood-specific articles into SF local category
+    // These articles already have neighborhood tags from fetching
+    const allSFLocal = [...filteredSF, ...neighborhoodArticles];
+
+    // Extract neighborhoods from articles using LLM (with concurrency control)
+    console.log('📍 Extracting neighborhoods from general articles...');
+
+    const extractWithConcurrency = async (articles: NewsArticle[], limit: number = 5): Promise<NewsArticle[]> => {
+      const results: NewsArticle[] = [];
+      for (let i = 0; i < articles.length; i += limit) {
+        const batch = articles.slice(i, i + limit);
+        const batchResults = await Promise.all(
+          batch.map(async (article) => {
+            // Skip if article already has neighborhoods (from neighborhood-specific fetch)
+            if (article.neighborhoods && article.neighborhoods.length > 0) {
+              console.log(`📍 ${article.title.substring(0, 50)}... → ${article.neighborhoods.join(', ')} (pre-tagged)`);
+              return article;
+            }
+
+            // Step 1: Try rule-based extraction (fast, no API)
+            let neighborhoods = extractNeighborhoodsRuleBased(article);
+
+            // Step 2: If no neighborhoods found, try LLM (slower, requires API)
+            if (neighborhoods.length === 0) {
+              neighborhoods = await extractNeighborhoods(article);
+            }
+
+            // Step 3: Fallback to "General SF" if still nothing
+            if (neighborhoods.length === 0) {
+              neighborhoods = ['General SF'];
+            }
+
+            console.log(`📍 ${article.title.substring(0, 50)}... → ${neighborhoods.join(', ')}`);
+
+            return {
+              ...article,
+              neighborhoods
+            };
+          })
+        );
+        results.push(...batchResults);
+      }
+      return results;
+    };
+
+    const [techWithNeighborhoods, politicsWithNeighborhoods, economyWithNeighborhoods, sfWithNeighborhoods] =
+      await Promise.all([
+        extractWithConcurrency(filteredTech.slice(0, 10)),
+        extractWithConcurrency(filteredPolitics.slice(0, 10)),
+        extractWithConcurrency(filteredEconomy.slice(0, 10)),
+        extractWithConcurrency(allSFLocal), // Include all SF local + neighborhood-specific
+      ]);
+
+    console.log('✓ Neighborhoods extracted successfully');
+
     // Generate summaries for each category using fallback (no AI to avoid timeouts)
     console.log('📝 Generating summaries (using fallback to avoid timeouts)...');
 
-    const techSummary = generateCategorySummary(filteredTech.slice(0, 10), 'tech');
-    const politicsSummary = generateCategorySummary(filteredPolitics.slice(0, 10), 'politics');
-    const economySummary = generateCategorySummary(filteredEconomy.slice(0, 10), 'economy');
-    const sfSummary = generateCategorySummary(filteredSF.slice(0, 10), 'sf-local');
+    const techSummary = generateCategorySummary(techWithNeighborhoods, 'tech');
+    const politicsSummary = generateCategorySummary(politicsWithNeighborhoods, 'politics');
+    const economySummary = generateCategorySummary(economyWithNeighborhoods, 'economy');
+    const sfSummary = generateCategorySummary(sfWithNeighborhoods, 'sf-local');
 
     console.log('✓ All summaries generated successfully');
 
-    // Combine category news
+    // Combine category news (using articles with extracted neighborhoods)
     const techNews: CategoryNews = {
       category: 'tech',
       ...techSummary,
-      sources: filteredTech.slice(0, 10),
+      sources: techWithNeighborhoods,
     };
 
     const politicsNews: CategoryNews = {
       category: 'politics',
       ...politicsSummary,
-      sources: filteredPolitics.slice(0, 10),
+      sources: politicsWithNeighborhoods,
     };
 
     const economyNews: CategoryNews = {
       category: 'economy',
       ...economySummary,
-      sources: filteredEconomy.slice(0, 10),
+      sources: economyWithNeighborhoods,
     };
 
     const sfLocalNews: CategoryNews = {
       category: 'sf-local',
       ...sfSummary,
-      sources: filteredSF.slice(0, 10),
+      sources: sfWithNeighborhoods,
     };
 
     // Aggregate all keywords

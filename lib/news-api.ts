@@ -279,3 +279,75 @@ export async function fetchNewsWithFallback(
   return filteredArticles;
 }
 
+/**
+ * Priority SF neighborhoods for targeted news fetching
+ */
+const PRIORITY_NEIGHBORHOODS = [
+  { name: 'Mission', query: 'Mission District San Francisco' },
+  { name: 'Castro/Upper Market', query: 'Castro San Francisco' },
+  { name: 'South of Market', query: 'SOMA San Francisco OR "South of Market" San Francisco' },
+  { name: 'Financial District', query: 'Financial District San Francisco OR FiDi San Francisco' },
+  { name: 'Haight Ashbury', query: 'Haight Ashbury San Francisco OR Haight-Ashbury' },
+  { name: 'Chinatown', query: 'Chinatown San Francisco' },
+  { name: 'North Beach', query: 'North Beach San Francisco' },
+  { name: 'Marina', query: 'Marina District San Francisco' },
+  { name: 'Tenderloin', query: 'Tenderloin San Francisco' },
+  { name: 'Potrero Hill', query: 'Potrero Hill San Francisco' },
+  { name: 'Mission Bay', query: 'Mission Bay San Francisco' },
+  { name: 'Noe Valley', query: 'Noe Valley San Francisco' },
+];
+
+/**
+ * Fetch neighborhood-specific news for each major SF neighborhood
+ * Each neighborhood gets 5 unique articles
+ * @param fromDate - Start date for articles
+ * @returns Map of neighborhood name to articles
+ */
+export async function fetchNeighborhoodSpecificNews(
+  fromDate: string | Date = '2025-10-20'
+): Promise<Map<string, NewsArticle[]>> {
+  const neighborhoodNews = new Map<string, NewsArticle[]>();
+
+  console.log('📍 Fetching neighborhood-specific news for', PRIORITY_NEIGHBORHOODS.length, 'neighborhoods...');
+
+  // Fetch news for each neighborhood
+  for (const neighborhood of PRIORITY_NEIGHBORHOODS) {
+    try {
+      const articles = await fetchNewsFromGoogleRSS('sf-local', neighborhood.query);
+
+      // Filter by date and SF relevance
+      const fromDateObj = new Date(fromDate);
+      const filtered = articles
+        .filter(article => {
+          const publishedDate = new Date(article.publishedDate);
+          return publishedDate >= fromDateObj;
+        })
+        .filter(article => isSFRelevant(article))
+        .slice(0, 5); // Take top 5 articles per neighborhood
+
+      if (filtered.length > 0) {
+        // Tag articles with the specific neighborhood
+        const tagged = filtered.map(article => ({
+          ...article,
+          neighborhoods: [neighborhood.name]
+        }));
+
+        neighborhoodNews.set(neighborhood.name, tagged);
+        console.log(`  ✓ ${neighborhood.name}: ${filtered.length} articles`);
+      } else {
+        console.log(`  ⚠ ${neighborhood.name}: No articles found`);
+      }
+
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.error(`  ✗ Error fetching news for ${neighborhood.name}:`, error);
+    }
+  }
+
+  const totalArticles = Array.from(neighborhoodNews.values()).reduce((sum, articles) => sum + articles.length, 0);
+  console.log(`✓ Fetched ${totalArticles} neighborhood-specific articles across ${neighborhoodNews.size} neighborhoods`);
+
+  return neighborhoodNews;
+}
+

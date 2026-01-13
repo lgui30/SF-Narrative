@@ -198,6 +198,7 @@ export interface NewsArticle {
   snippet: string;
   publishedDate: string;
   source: string;
+  neighborhoods?: string[]; // SF neighborhoods mentioned in article (extracted via LLM)
 }
 
 export interface CategoryNews {
