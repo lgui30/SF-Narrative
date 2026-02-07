@@ -146,10 +146,12 @@ export async function fetchNewsFromAPI(
  * Fetch news from Google News RSS feed (free, no API key required)
  * All queries filtered for San Francisco relevance
  * @param category - News category
+ * @param customQuery - Optional custom query to override default category query
  * @returns Array of news articles
  */
 export async function fetchNewsFromGoogleRSS(
-  category: 'tech' | 'politics' | 'economy' | 'sf-local'
+  category: 'tech' | 'politics' | 'economy' | 'sf-local',
+  customQuery?: string
 ): Promise<NewsArticle[]> {
   // ALL queries now include San Francisco terms
   const categoryQueries = {
@@ -161,8 +163,8 @@ export async function fetchNewsFromGoogleRSS(
 
   try {
     console.log(`Fetching ${category} news from Google News RSS...`);
-    
-    const query = encodeURIComponent(categoryQueries[category]);
+
+    const query = encodeURIComponent(customQuery || categoryQueries[category]);
     const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`;
 
     const response = await fetch(rssUrl);

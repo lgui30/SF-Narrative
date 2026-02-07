@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed-news": "tsx scripts/seed-real-news-weeks.ts"
+    "seed-news": "tsx scripts/seed-real-news-weeks.ts",
+    "fetch-news": "tsx scripts/fetch-news.ts",
+    "fetch-activities": "tsx scripts/fetch-activities.ts",
+    "fetch-content": "npm run fetch-news && npm run fetch-activities"
   },
   "repository": {
     "type": "git",
@@ -25,6 +28,7 @@
   "dependencies": {
     "@prisma/client": "^6.18.0",
     "@tailwindcss/postcss": "^4.1.16",
+    "@types/leaflet.markercluster": "^1.5.6",
     "@types/node": "^24.9.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
@@ -32,6 +36,7 @@
     "cheerio": "^1.1.2",
     "dotenv": "^17.2.3",
     "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.548.0",
     "next": "^16.0.0",
     "playwright": "^1.56.1",
@@ -40,7 +45,6 @@
     "prisma": "^6.18.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-leaflet": "^5.0.0",
     "tailwindcss": "^4.1.16",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3",

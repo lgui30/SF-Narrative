@@ -1,0 +1,12 @@
+# pmkit configuration
+version: 1
+
+# Workspace settings
+workspace:
+  name: "sf-weekly-news-digest"
+
+# Folder configuration
+folders:
+  prds: "pm/prds"
+  docs: "pm/docs"
+  changelog: "pm/changelog"

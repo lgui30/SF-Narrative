@@ -1,0 +1,150 @@
+{
+  "Bayview": {
+    "tagline": "Industrial grit meets waterfront renewal on the city's southeast shore.",
+    "description": "Once the backbone of SF's shipbuilding industry, Bayview is undergoing a slow renaissance with new parks along the bay, a growing arts scene, and deep roots in the city's Black community."
+  },
+  "Bernal Heights": {
+    "tagline": "A hilltop village with the best skyline views and off-leash dog energy.",
+    "description": "Bernal Heights feels like a small town dropped into a big city, with its beloved hilltop park, tight-knit community, and Cortland Avenue lined with indie shops and cafes."
+  },
+  "Castro/Upper Market": {
+    "tagline": "The historic heart of LGBTQ+ culture and a neighborhood that never stops celebrating.",
+    "description": "Anchored by the iconic Castro Theatre, this neighborhood wears its history proudly while sustaining a vibrant mix of nightlife, independent retail, and community activism."
+  },
+  "Chinatown": {
+    "tagline": "The oldest Chinatown in North America, alive with lanterns, dim sum, and tradition.",
+    "description": "Packed into a few steep blocks, SF's Chinatown is a sensory overload of herbalists, tea shops, and bustling produce markets that have served the community for over 170 years."
+  },
+  "Crocker Amazon": {
+    "tagline": "Soccer fields, community gardens, and a quiet neighborhood that keeps it real.",
+    "description": "Centered around its massive park and playground complex, Crocker Amazon is a diverse, family-oriented neighborhood with strong Filipino and Latino roots and an easygoing pace."
+  },
+  "Diamond Heights": {
+    "tagline": "Mid-century modern homes perched above the fog with panoramic city views.",
+    "description": "A residential enclave developed in the 1960s, Diamond Heights offers dramatic elevation, easy access to Glen Canyon, and a quieter alternative to the bustling neighborhoods below."
+  },
+  "Downtown/Civic Center": {
+    "tagline": "City Hall grandeur, world-class performing arts, and the pulse of SF politics.",
+    "description": "Home to the Beaux-Arts City Hall, War Memorial Opera House, and the Asian Art Museum, this area is the civic and cultural nerve center of San Francisco."
+  },
+  "Excelsior": {
+    "tagline": "A proudly working-class neighborhood with some of the city's best hidden eats.",
+    "description": "Tucked in the southern part of the city, Excelsior is known for its diverse mom-and-pop restaurants, McLaren Park's trails, and a community that fiercely resists displacement."
+  },
+  "Financial District": {
+    "tagline": "Towers of commerce by day, surprisingly moody bar scene by night.",
+    "description": "The FiDi is SF's suit-and-tie district, home to the Transamerica Pyramid and Salesforce Tower, but its narrow streets and historic alleys hide speakeasies and century-old lunch counters."
+  },
+  "Glen Park": {
+    "tagline": "A cozy BART-connected village tucked into a canyon with trails out the back door.",
+    "description": "Glen Park combines small-town charm with big-city access, offering a beloved bookstore-cafe, excellent restaurants on Diamond Street, and immediate entry to Glen Canyon's wildlands."
+  },
+  "Golden Gate Park": {
+    "tagline": "1,000 acres of museums, bison, windmills, and the city's green lung.",
+    "description": "Stretching from the Haight to the ocean, Golden Gate Park holds the de Young Museum, California Academy of Sciences, Japanese Tea Garden, and countless hidden meadows and trails."
+  },
+  "Haight Ashbury": {
+    "tagline": "Tie-dye legacy, Victorian architecture, and the eternal spirit of the Summer of Love.",
+    "description": "The Haight still channels its 1960s counterculture roots through vintage shops, record stores, and colorful Victorians, while attracting visitors from around the world to walk its storied blocks."
+  },
+  "Inner Richmond": {
+    "tagline": "Fog-kissed avenues packed with the best Asian food outside of Asia.",
+    "description": "Clement Street is the real deal for Burmese tea leaf salad, hand-pulled noodles, and dim sum, while the neighborhood's proximity to the Presidio and Golden Gate Park makes it a quiet gem."
+  },
+  "Inner Sunset": {
+    "tagline": "UCSF students, craft breweries, and 9th Avenue's unassuming restaurant row.",
+    "description": "Nestled between Golden Gate Park and the slopes of Mount Sutro, the Inner Sunset has a college-town feel with excellent food options, neighborhood bars, and easy access to nature."
+  },
+  "Lakeshore": {
+    "tagline": "Lake Merced, SF State, and ocean breezes at the city's far southwest edge.",
+    "description": "Lakeshore is defined by the sprawling Lake Merced and its running trails, the Harding Park golf course, and a quiet residential character that feels far from downtown."
+  },
+  "Marina": {
+    "tagline": "Joggers, brunch spots, and Golden Gate views from the waterfront green.",
+    "description": "Built on landfill from the 1915 World's Fair, the Marina draws a young, active crowd with Chestnut Street shopping, the Palace of Fine Arts, and Crissy Field's bayside paths."
+  },
+  "Mission": {
+    "tagline": "Murals, burritos, and the beating heart of SF's Latino culture.",
+    "description": "Rapidly changing but still fiercely itself, the Mission blends world-class street art with some of the city's best food and nightlife, from Dolores Park picnics to Valencia Street bars."
+  },
+  "Nob Hill": {
+    "tagline": "Cable cars, grand hotels, and old-money elegance on the city's most famous hill.",
+    "description": "Home to Grace Cathedral, the Fairmont, and the Mark Hopkins, Nob Hill is where San Francisco's Gilded Age wealth built its legacy in stone and marble."
+  },
+  "Noe Valley": {
+    "tagline": "Stroller-friendly sidewalks, sunny weather, and 24th Street's boutique charm.",
+    "description": "Protected from fog by Twin Peaks, Noe Valley is a family-friendly neighborhood with a thriving small-business corridor, excellent coffee, and a farmers market on Saturdays."
+  },
+  "North Beach": {
+    "tagline": "Beat poetry, red-sauce Italian, and espresso on Columbus Avenue.",
+    "description": "San Francisco's Little Italy is also the birthplace of the Beat Generation, where City Lights Bookstore, Vesuvio Cafe, and neighborhood trattorias coexist with Coit Tower looming above."
+  },
+  "Ocean View": {
+    "tagline": "A quiet residential pocket with Balboa Park BART and community roots.",
+    "description": "Ocean View is an affordable, multicultural neighborhood in the city's south, offering easy freeway access, proximity to City College, and a growing sense of local pride."
+  },
+  "Outer Mission": {
+    "tagline": "Family taquerias, Balboa Park, and neighborhood life at an unhurried pace.",
+    "description": "Stretching along Mission Street's southern reach, the Outer Mission is a working-class neighborhood with deep Latino heritage, neighborhood bars, and access to McLaren Park."
+  },
+  "Outer Richmond": {
+    "tagline": "Ocean Beach sunsets, Lands End trails, and the city's best kept food secrets.",
+    "description": "The foggy Outer Richmond rewards explorers with stunning coastal hikes at Lands End, authentic Russian and Chinese restaurants on Geary, and a laid-back residential feel."
+  },
+  "Outer Sunset": {
+    "tagline": "Surfers, sand dunes, and tapioca drinks at the edge of the Pacific.",
+    "description": "The Outer Sunset is SF's beachy backyard, where surfers hit Ocean Beach, families gather at the zoo, and the N-Judah rumbles down Judah Street past eclectic small restaurants."
+  },
+  "Pacific Heights": {
+    "tagline": "Billionaire's Row views, Fillmore Street shopping, and the city's most elegant homes.",
+    "description": "Pacific Heights showcases San Francisco's most stunning residential architecture, with mansions overlooking the bay, upscale boutiques on Fillmore, and Lafayette Park's sunny lawns."
+  },
+  "Parkside": {
+    "tagline": "Tree-lined blocks, Stern Grove concerts, and a neighborhood that flies under the radar.",
+    "description": "Parkside is a quiet, fog-belt residential area known for the free summer concert series at Stern Grove and easy access to Ocean Beach, Lake Merced, and the L-Taraval line."
+  },
+  "Potrero Hill": {
+    "tagline": "Sunny slopes, design studios, and 18th Street's neighborhood feel.",
+    "description": "Potrero Hill claims some of the city's best weather and views, with a walkable commercial strip on 18th Street, a thriving maker community, and proximity to the Dogpatch waterfront."
+  },
+  "Presidio": {
+    "tagline": "A former military base turned national park at the foot of the Golden Gate Bridge.",
+    "description": "The Presidio offers 1,500 acres of forests, beaches, and historic buildings, plus world-class destinations like the Walt Disney Family Museum and Crissy Field's restored wetlands."
+  },
+  "Presidio Heights": {
+    "tagline": "Quiet luxury between the Presidio forest and Sacramento Street's boutiques.",
+    "description": "Presidio Heights is one of the city's most exclusive residential areas, with gorgeous homes, mature trees, and a refined shopping strip along Sacramento Street."
+  },
+  "Russian Hill": {
+    "tagline": "Lombard Street curves, hidden staircases, and some of the steepest grades in town.",
+    "description": "Russian Hill is a walker's paradise of secret gardens, steep stairways, and sweeping bay views, anchored by the famously crooked Lombard Street and Hyde Street's cable car line."
+  },
+  "Seacliff": {
+    "tagline": "Cliffside mansions, China Beach, and one of SF's most secluded enclaves.",
+    "description": "Seacliff is a tiny, ultra-wealthy residential pocket perched above the Pacific, offering access to the hidden gem of China Beach and views straight to the Marin Headlands."
+  },
+  "South of Market": {
+    "tagline": "Tech campuses, nightclubs, and the reinvention of SF's industrial south.",
+    "description": "SoMa is the city's most dynamic district, home to the SFMOMA, Oracle Park, countless tech offices, and a nightlife and arts scene that spans warehouse parties to gallery openings."
+  },
+  "Treasure Island/YBI": {
+    "tagline": "A man-made island with skyline views and a wine-tasting scene emerging from the fog.",
+    "description": "Built for the 1939 World's Fair, Treasure Island is being transformed into a new neighborhood with stunning city panoramas, weekend flea markets, and a growing cluster of urban wineries."
+  },
+  "Twin Peaks": {
+    "tagline": "The city's most iconic viewpoint, where fog rolls in like a slow-motion wave.",
+    "description": "Twin Peaks offers a 360-degree panorama of the entire Bay Area from its windswept summit, making it the definitive spot for watching fog swallow the city at sunset."
+  },
+  "Visitacion Valley": {
+    "tagline": "Community gardens, Leland Avenue, and a neighborhood building its own future.",
+    "description": "Visitacion Valley is a diverse, working-class neighborhood in the far south of the city, centered around Leland Avenue's small businesses and the community-driven Schlage Lock redevelopment."
+  },
+  "West of Twin Peaks": {
+    "tagline": "Quiet streets, ocean views, and some of the city's foggiest microclimates.",
+    "description": "West of Twin Peaks encompasses several sub-neighborhoods with winding streets, mid-century homes, and a suburban calm that belies its location within city limits."
+  },
+  "Western Addition": {
+    "tagline": "Jazz legacy, Painted Ladies, and one of SF's most culturally layered neighborhoods.",
+    "description": "The Western Addition holds Alamo Square's iconic Victorians, the Fillmore jazz corridor, and a complex history as the historic heart of San Francisco's Black community."
+  }
+}

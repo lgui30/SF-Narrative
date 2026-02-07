@@ -13,37 +13,6 @@ datasource db {
   directUrl = env("POSTGRES_URL")
 }
 
-model TimelineEvent {
-  id              String   @id @default(cuid())
-  headline        String   // The main topic, e.g., "#SalesforceLayoffs"
-  weekOf          DateTime @unique // The Monday of the week this event represents
-  hypeSummary     String   @db.Text // The positive narrative summary from the LLM
-  backlashSummary String   @db.Text // The negative narrative summary from the LLM
-  weeklyPulse     String   @db.Text // The LLM's summary connecting this event to the city's mood
-  hypeTweets      Json?    // Array of pro-tweets for evidence layer
-  backlashTweets  Json?    // Array of anti-tweets for evidence layer
-  communitySentiment Json?  // Community sentiment data (hype%, backlash%)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  userVotes       UserVote[] // User votes for this event
-}
-
-model UserVote {
-  id              String   @id @default(cuid())
-  eventId         String
-  hypePercentage  Int      // User's hype percentage (0-100)
-  backlashPercentage Int   // User's backlash percentage (0-100)
-  userAgent       String?  // Track user agent for analytics
-  ipAddress       String?  // Track IP for basic analytics (hashed)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  event           TimelineEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  @@index([eventId])
-  @@index([createdAt])
-}
-
 model WeeklyNews {
   id              String   @id @default(cuid())
   weekOf          DateTime @unique // The Monday of the week this news represents
