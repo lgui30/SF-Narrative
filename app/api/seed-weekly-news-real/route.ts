@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { fetchNewsWithFallback, fetchNeighborhoodSpecificNews } from '@/lib/news-api';
 import type { NewsArticle, CategoryNews } from '@/lib/types';
 import { filterByStartDate } from '@/lib/news-aggregator';
-import { extractNeighborhoods } from '@/lib/llm';
+import { extractNeighborhoods, summarizeWeeklyNewsFast } from '@/lib/llm';
 import { extractNeighborhoodsRuleBased } from '@/lib/neighborhood-matcher';
 
 /**
@@ -209,13 +209,22 @@ export async function GET(request: NextRequest) {
 
     console.log('✓ Neighborhoods extracted successfully');
 
-    // Generate summaries for each category using fallback (no AI to avoid timeouts)
-    console.log('📝 Generating summaries (using fallback to avoid timeouts)...');
+    // Generate summaries for each category using fast AI with fallback
+    console.log('📝 Generating AI summaries (fast model with fallback)...');
 
-    const techSummary = generateCategorySummary(techWithNeighborhoods, 'tech');
-    const politicsSummary = generateCategorySummary(politicsWithNeighborhoods, 'politics');
-    const economySummary = generateCategorySummary(economyWithNeighborhoods, 'economy');
-    const sfSummary = generateCategorySummary(sfWithNeighborhoods, 'sf-local');
+    // Process sequentially to stay within Vercel timeout limits
+    // Each call has 12s timeout, with immediate fallback on failure
+    const techSummary = await summarizeWeeklyNewsFast('tech', techWithNeighborhoods, 12000)
+      ?? generateCategorySummary(techWithNeighborhoods, 'tech');
+    
+    const politicsSummary = await summarizeWeeklyNewsFast('politics', politicsWithNeighborhoods, 12000)
+      ?? generateCategorySummary(politicsWithNeighborhoods, 'politics');
+    
+    const economySummary = await summarizeWeeklyNewsFast('economy', economyWithNeighborhoods, 12000)
+      ?? generateCategorySummary(economyWithNeighborhoods, 'economy');
+    
+    const sfSummary = await summarizeWeeklyNewsFast('sf-local', sfWithNeighborhoods, 12000)
+      ?? generateCategorySummary(sfWithNeighborhoods, 'sf-local');
 
     console.log('✓ All summaries generated successfully');
 

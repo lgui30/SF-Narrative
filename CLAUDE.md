@@ -106,13 +106,21 @@ Located in `lib/llm.ts`:
 - All calls have 30-second timeout to prevent Vercel function timeouts
 
 **Key Functions:**
-- `summarizeWeeklyNews()`: Generates news summaries for each category
+- `summarizeWeeklyNews()`: Full news summarization using DeepSeek model (30s timeout)
   - Returns: summaryShort, summaryDetailed, bullets, keywords
   - Uses JSON response format
+- `summarizeWeeklyNewsFast()`: Lightweight summarization for cron jobs (12s timeout)
+  - Uses `meta-llama/llama-3.2-3b-instruct` for speed
+  - Returns null on failure (caller should use fallback)
+  - Optimized prompt with fewer tokens
 - `summarizeWeeklyNewsWithRetry()`: Wrapper with exponential backoff (3 retries)
 - `analyzeNarratives()`: Legacy function for narrative analysis (currently unused)
 
-**Important**: The cron endpoint (`api/seed-weekly-news-real`) currently disables AI summarization to avoid timeouts and uses fallback summaries generated from article titles.
+**Important**: The cron endpoint uses `summarizeWeeklyNewsFast()` - a lightweight summarization function that:
+- Uses `meta-llama/llama-3.2-3b-instruct` (fast, 3B model) instead of DeepSeek
+- Has 12-second timeout per category (48s total for 4 categories)
+- Falls back to title-based summaries (`generateCategorySummary()`) on failure
+- Processes categories sequentially to stay within Vercel's 60s limit
 
 ### Frontend Architecture
 

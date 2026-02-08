@@ -359,6 +359,123 @@ export async function summarizeWeeklyNewsWithRetry(
 }
 
 /**
+ * Fast news summarization using lightweight model (for cron jobs with timeouts)
+ * Uses meta-llama/llama-3.2-3b-instruct for speed over quality
+ * @param category - News category
+ * @param articles - Array of news articles
+ * @param timeoutMs - Timeout in milliseconds (default: 12000)
+ * @returns News summary or null on failure
+ */
+export async function summarizeWeeklyNewsFast(
+  category: 'tech' | 'politics' | 'economy' | 'sf-local',
+  articles: NewsArticle[],
+  timeoutMs: number = 12000
+): Promise<NewsSummary | null> {
+  const apiKey = process.env.NOVITA_API_KEY;
+
+  if (!apiKey) {
+    console.warn('NOVITA_API_KEY not configured');
+    return null;
+  }
+
+  if (!articles || articles.length === 0) {
+    return null;
+  }
+
+  const categoryLabels = {
+    tech: 'Technology',
+    politics: 'Politics',
+    economy: 'Economy',
+    'sf-local': 'Local News',
+  };
+
+  // Compact article format - just titles and first sentence of snippet
+  const articlesText = articles
+    .slice(0, 8) // Limit to 8 articles to reduce tokens
+    .map((article, i) => {
+      const snippet = article.snippet.split('.')[0] || '';
+      return `${i + 1}. ${article.title}${snippet ? ` - ${snippet}` : ''}`;
+    })
+    .join('\n');
+
+  // Concise prompt optimized for speed
+  const prompt = `Summarize these San Francisco ${categoryLabels[category]} news articles. Return JSON with exactly these keys:
+
+{
+  "summaryShort": "3-4 sentence summary for a card",
+  "summaryDetailed": "2 paragraphs with context and analysis for SF residents",
+  "bullets": ["5-7 key points as bullet strings"],
+  "keywords": ["3-5 relevant keywords"]
+}
+
+Articles:
+${articlesText}
+
+JSON only:`;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    const response = await fetch('https://api.novita.ai/v3/openai/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.2-3b-instruct', // Fast model
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 800,
+        temperature: 0.5,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error(`Fast summary API failed: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!data.choices || data.choices.length === 0) {
+      return null;
+    }
+
+    let content = data.choices[0].message.content.trim();
+
+    // Clean markdown wrappers
+    if (content.startsWith('```json')) {
+      content = content.replace(/^```json\s*\n?/, '').replace(/\n?```\s*$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+
+    // Extract JSON if embedded in text
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      content = jsonMatch[0];
+    }
+
+    const parsed = JSON.parse(content);
+    const validated = NewsSummarySchema.parse(parsed);
+
+    console.log(`✅ Fast AI summary generated for ${category}`);
+    return validated;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn(`⏱️ Fast summary timed out for ${category} (${timeoutMs}ms)`);
+    } else {
+      console.error(`Fast summary failed for ${category}:`, error);
+    }
+    return null;
+  }
+}
+
+/**
  * Extract SF neighborhoods mentioned in a news article using LLM
  * @param article - News article to analyze
  * @returns Array of neighborhood names (defaults to ["General SF"] on error)
