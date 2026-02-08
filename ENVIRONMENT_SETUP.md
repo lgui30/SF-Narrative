@@ -21,14 +21,40 @@ NOVITA_API_KEY="your-novita-api-key-here"
 - **Cost:** ~$0.01 per week for summaries
 - **Model used:** `deepseek/deepseek-v3.2-exp`
 
-### NewsAPI
+### NewsAPI (Legacy - Optional)
 ```env
-NEWS_API_KEY="your-newsapi-key-here"
+NEWSAPI_KEY="your-newsapi-key-here"
 ```
-- **Purpose:** Primary news aggregation source
+- **Purpose:** Legacy news source (used when USE_LEGACY_SOURCES=true)
 - **Where to get:** [https://newsapi.org](https://newsapi.org) (Free tier: 100 requests/day)
 - **Cost:** Free (or $449/month for production tier)
-- **Note:** Google RSS is used as fallback if NewsAPI fails
+- **Note:** No longer primary source - see Multi-Source Architecture below
+
+### TheNewsAPI (Backup - Optional)
+```env
+THENEWSAPI_KEY="your-thenewsapi-key-here"
+```
+- **Purpose:** Backup news source when primary sources have insufficient articles
+- **Where to get:** [https://thenewsapi.com](https://thenewsapi.com) (Free tier: 100 requests/day)
+- **Cost:** Free tier available
+- **Note:** Only used when category has <5 articles from primary sources
+
+### GNews API (Fallback - Optional)
+```env
+GNEWS_API_KEY="your-gnews-key-here"
+```
+- **Purpose:** Final fallback for news when other sources fail
+- **Where to get:** [https://gnews.io](https://gnews.io) (Free tier: 100 requests/day)
+- **Cost:** Free tier available
+- **Note:** Reserved for future use
+
+### Legacy Source Toggle
+```env
+USE_LEGACY_SOURCES="false"
+```
+- **Purpose:** Force use of old NewsAPI/Google RSS approach
+- **Values:** "true" or "false" (default: false)
+- **When to use:** Rollback if multi-source has issues
 
 ### Cron Secret (For Automated Updates)
 ```env
@@ -38,6 +64,28 @@ CRON_SECRET="your-random-secret-here"
 - **Generate:** `openssl rand -base64 32`
 - **Example:** `gX8fK2nP9mL4jH6sQ1wR7tY5vC3xZ0bA`
 - **Required for:** Vercel Cron Jobs to work securely
+
+## Multi-Source News Architecture
+
+The app uses a multi-source news aggregation system for better SF coverage:
+
+### Primary Sources (No API Key Required)
+1. **SF Standard RSS** - Local SF news, no rate limits
+2. **Mission Local RSS** - Mission District news, no rate limits
+3. **Reddit** - r/sanfrancisco, r/bayarea (60 req/min without auth)
+4. **Hacker News** - Tech news filtered for SF relevance, no limits
+
+### Backup Sources (API Key Optional)
+5. **TheNewsAPI** - Used when category has <5 articles (100 req/day)
+6. **GNews** - Final fallback (100 req/day)
+
+### Priority Order
+```
+RSS feeds → Reddit → Hacker News → TheNewsAPI → GNews
+```
+
+### Rollback
+If multi-source causes issues, set `USE_LEGACY_SOURCES=true` to use the old NewsAPI/Google RSS approach.
 
 ## Setup Instructions
 
@@ -169,10 +217,15 @@ curl -X GET "http://localhost:3000/api/seed-weekly-news-real" \
 |---------|-----------|-----------|-------|
 | Vercel | 1 cron job | Unlimited | 1 job/week |
 | Novita AI | $5 credit | Pay as you go | ~$0.01/week |
-| NewsAPI | 100 req/day | $449/month | ~10 req/week |
+| RSS Feeds | Unlimited | N/A | ~4 req/week |
+| Reddit | 60 req/min | OAuth | ~10 req/week |
+| Hacker News | Unlimited | N/A | ~100 req/week |
+| TheNewsAPI | 100 req/day | Paid plans | ~4 req/week (backup) |
 | Database | Varies | Varies | Minimal |
 
 **Estimated total:** ~$0.50/month (excluding hosting)
+
+**Note:** Primary sources (RSS, Reddit, HN) are free with no practical limits for weekly fetching.
 
 ## Next Steps
 

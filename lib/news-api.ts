@@ -1,14 +1,23 @@
 /**
  * NewsAPI Integration Module
  * 
- * Uses NewsAPI.org to fetch real-time news with accurate published dates
- * Free tier: 100 requests/day, 1 month of history
+ * Multi-source news aggregation for SF-related news:
+ * - Primary: RSS feeds (SF Standard, Mission Local)
+ * - Community: Reddit (r/sanfrancisco, r/bayarea)
+ * - Tech: Hacker News (filtered for SF relevance)
+ * - Backup: TheNewsAPI, GNews (when needed)
  * 
- * To use: Sign up at https://newsapi.org/ and add NEWSAPI_KEY to .env
+ * Legacy: NewsAPI.org support (enabled via USE_LEGACY_SOURCES=true)
  */
 
 import { z } from 'zod';
 import type { NewsArticle } from './types';
+import { 
+  fetchAllCategories, 
+  fetchFromAllSources,
+  scoreRelevance,
+  deduplicateByUrl,
+} from './sources';
 
 // Schema for NewsAPI response
 const NewsAPIArticleSchema = z.object({
@@ -146,10 +155,12 @@ export async function fetchNewsFromAPI(
  * Fetch news from Google News RSS feed (free, no API key required)
  * All queries filtered for San Francisco relevance
  * @param category - News category
+ * @param customQuery - Optional custom search query (overrides default)
  * @returns Array of news articles
  */
 export async function fetchNewsFromGoogleRSS(
-  category: 'tech' | 'politics' | 'economy' | 'sf-local'
+  category: 'tech' | 'politics' | 'economy' | 'sf-local',
+  customQuery?: string
 ): Promise<NewsArticle[]> {
   // ALL queries now include San Francisco terms
   const categoryQueries = {
@@ -162,7 +173,9 @@ export async function fetchNewsFromGoogleRSS(
   try {
     console.log(`Fetching ${category} news from Google News RSS...`);
     
-    const query = encodeURIComponent(categoryQueries[category]);
+    // Use custom query if provided, otherwise use category default
+    const queryText = customQuery || categoryQueries[category];
+    const query = encodeURIComponent(queryText);
     const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`;
 
     const response = await fetch(rssUrl);
@@ -350,4 +363,138 @@ export async function fetchNeighborhoodSpecificNews(
 
   return neighborhoodNews;
 }
+
+// ============================================================================
+// NEW MULTI-SOURCE API (default)
+// Set USE_LEGACY_SOURCES=true to use old NewsAPI/Google RSS approach
+// ============================================================================
+
+/**
+ * Check if legacy sources should be used
+ */
+function useLegacySources(): boolean {
+  return process.env.USE_LEGACY_SOURCES === 'true';
+}
+
+/**
+ * Fetch news using multi-source aggregation (new approach)
+ * Sources: RSS feeds, Reddit, Hacker News, TheNewsAPI (backup)
+ * 
+ * @param category - News category
+ * @param fromDate - Start date
+ * @returns Array of news articles sorted by SF relevance
+ */
+export async function fetchNewsMultiSource(
+  category: 'tech' | 'politics' | 'economy' | 'sf-local',
+  fromDate: string | Date = '2025-10-20'
+): Promise<NewsArticle[]> {
+  const fromDateObj = typeof fromDate === 'string' ? new Date(fromDate) : fromDate;
+  
+  console.log(`📰 Fetching ${category} via multi-source aggregation...`);
+  
+  const articles = await fetchFromAllSources(category, {
+    limit: 15,
+    fromDate: fromDateObj,
+  });
+  
+  console.log(`✓ Multi-source: ${articles.length} articles for ${category}`);
+  return articles;
+}
+
+/**
+ * Fetch all categories using multi-source aggregation
+ * 
+ * @param fromDate - Start date for articles
+ * @returns Object with articles for each category
+ */
+export async function fetchAllCategoriesMultiSource(
+  fromDate: string | Date = '2025-10-20'
+): Promise<{
+  tech: NewsArticle[];
+  politics: NewsArticle[];
+  economy: NewsArticle[];
+  'sf-local': NewsArticle[];
+}> {
+  const fromDateObj = typeof fromDate === 'string' ? new Date(fromDate) : fromDate;
+  
+  return fetchAllCategories({
+    limit: 15,
+    fromDate: fromDateObj,
+  });
+}
+
+/**
+ * Smart fetch - uses multi-source by default, falls back to legacy if configured
+ * 
+ * @param category - News category
+ * @param fromDate - Start date
+ * @returns Array of news articles
+ */
+export async function fetchNewsSmart(
+  category: 'tech' | 'politics' | 'economy' | 'sf-local',
+  fromDate: string | Date = '2025-10-20'
+): Promise<NewsArticle[]> {
+  if (useLegacySources()) {
+    console.log('⚠️ Using legacy news sources (USE_LEGACY_SOURCES=true)');
+    return fetchNewsWithFallback(category, fromDate);
+  }
+  
+  // Try multi-source first
+  try {
+    const articles = await fetchNewsMultiSource(category, fromDate);
+    
+    // If multi-source fails, fall back to legacy
+    if (articles.length === 0) {
+      console.log(`⚠️ Multi-source returned no results for ${category}, trying legacy...`);
+      return fetchNewsWithFallback(category, fromDate);
+    }
+    
+    return articles;
+  } catch (error) {
+    console.error(`Multi-source fetch failed for ${category}, falling back to legacy:`, error);
+    return fetchNewsWithFallback(category, fromDate);
+  }
+}
+
+/**
+ * Fetch all categories with smart source selection
+ * 
+ * @param fromDate - Start date for articles
+ * @returns Object with articles for each category
+ */
+export async function fetchAllCategoriesSmart(
+  fromDate: string | Date = '2025-10-20'
+): Promise<{
+  tech: NewsArticle[];
+  politics: NewsArticle[];
+  economy: NewsArticle[];
+  'sf-local': NewsArticle[];
+}> {
+  if (useLegacySources()) {
+    console.log('⚠️ Using legacy news sources (USE_LEGACY_SOURCES=true)');
+    const [tech, politics, economy, sfLocal] = await Promise.all([
+      fetchNewsWithFallback('tech', fromDate),
+      fetchNewsWithFallback('politics', fromDate),
+      fetchNewsWithFallback('economy', fromDate),
+      fetchNewsWithFallback('sf-local', fromDate),
+    ]);
+    return { tech, politics, economy, 'sf-local': sfLocal };
+  }
+  
+  try {
+    return await fetchAllCategoriesMultiSource(fromDate);
+  } catch (error) {
+    console.error('Multi-source fetch failed, falling back to legacy:', error);
+    const [tech, politics, economy, sfLocal] = await Promise.all([
+      fetchNewsWithFallback('tech', fromDate),
+      fetchNewsWithFallback('politics', fromDate),
+      fetchNewsWithFallback('economy', fromDate),
+      fetchNewsWithFallback('sf-local', fromDate),
+    ]);
+    return { tech, politics, economy, 'sf-local': sfLocal };
+  }
+}
+
+// Re-export utility functions from sources
+export { scoreRelevance, deduplicateByUrl } from './sources';
 

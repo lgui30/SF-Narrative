@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { fetchNewsWithFallback, fetchNeighborhoodSpecificNews } from '@/lib/news-api';
+import { 
+  fetchAllCategoriesSmart, 
+  fetchNeighborhoodSpecificNews,
+  fetchNewsWithFallback 
+} from '@/lib/news-api';
 import type { NewsArticle, CategoryNews } from '@/lib/types';
 import { filterByStartDate } from '@/lib/news-aggregator';
 import { extractNeighborhoods, summarizeWeeklyNewsFast } from '@/lib/llm';
@@ -117,14 +121,14 @@ export async function GET(request: NextRequest) {
     console.log(`📅 Fetching news for week of: ${weekOf.toISOString().split('T')[0]}`);
     console.log(`📅 Fetching articles from: ${fetchStartDate.toISOString().split('T')[0]}`);
 
-    // Fetch real news from NewsAPI/Google RSS for all categories
-    console.log('📰 Fetching news from APIs...');
-    const [techArticles, politicsArticles, economyArticles, sfArticles] = await Promise.all([
-      fetchNewsWithFallback('tech', fetchStartDate),
-      fetchNewsWithFallback('politics', fetchStartDate),
-      fetchNewsWithFallback('economy', fetchStartDate),
-      fetchNewsWithFallback('sf-local', fetchStartDate),
-    ]);
+    // Fetch real news using multi-source aggregation
+    // Sources: RSS feeds (SF Standard, Mission Local), Reddit, Hacker News, TheNewsAPI (backup)
+    console.log('📰 Fetching news from multiple sources...');
+    const allCategoryArticles = await fetchAllCategoriesSmart(fetchStartDate);
+    const techArticles = allCategoryArticles.tech;
+    const politicsArticles = allCategoryArticles.politics;
+    const economyArticles = allCategoryArticles.economy;
+    const sfArticles = allCategoryArticles['sf-local'];
 
     // Additional filtering to ensure dates are from the fetch start date onwards
     const filteredTech = filterByStartDate(techArticles, fetchStartDate);
