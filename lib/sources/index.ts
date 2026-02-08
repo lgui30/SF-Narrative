@@ -69,12 +69,17 @@ export function scoreRelevance(article: NewsArticle): number {
     }
   }
   
-  // Recency bonus
+  // Recency bonus (only for valid past dates)
   try {
-    const hoursAgo = (Date.now() - new Date(article.publishedDate).getTime()) / 3600000;
-    if (hoursAgo < 6) score += 10;
-    else if (hoursAgo < 24) score += 5;
-    else if (hoursAgo < 72) score += 2;
+    const pubDate = new Date(article.publishedDate);
+    if (!isNaN(pubDate.getTime())) {
+      const hoursAgo = (Date.now() - pubDate.getTime()) / 3600000;
+      // Only give recency bonus for past dates (hoursAgo > 0)
+      if (hoursAgo > 0 && hoursAgo < 6) score += 10;
+      else if (hoursAgo > 0 && hoursAgo < 24) score += 5;
+      else if (hoursAgo > 0 && hoursAgo < 72) score += 2;
+      // Future dates or very old articles get no recency bonus
+    }
   } catch {
     // Ignore date parsing errors
   }
@@ -90,20 +95,34 @@ export function scoreRelevance(article: NewsArticle): number {
 
 /**
  * Normalize URL for deduplication
+ * Removes tracking params but preserves meaningful query params
  */
 function normalizeUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    // Remove tracking params
-    parsed.searchParams.delete('utm_source');
-    parsed.searchParams.delete('utm_medium');
-    parsed.searchParams.delete('utm_campaign');
-    parsed.searchParams.delete('ref');
-    parsed.searchParams.delete('source');
-    // Normalize
-    return parsed.hostname.replace('www.', '') + parsed.pathname.replace(/\/$/, '');
+    
+    // Tracking params to remove
+    const trackingParams = [
+      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+      'ref', 'source', 'fbclid', 'gclid', 'mc_cid', 'mc_eid',
+    ];
+    
+    for (const param of trackingParams) {
+      parsed.searchParams.delete(param);
+    }
+    
+    // Sort remaining params for consistent comparison
+    parsed.searchParams.sort();
+    
+    // Build normalized URL: hostname (without www) + pathname (without trailing slash) + sorted query string
+    const hostname = parsed.hostname.replace(/^www\./, '');
+    const pathname = parsed.pathname.replace(/\/$/, '');
+    const queryString = parsed.searchParams.toString();
+    
+    return queryString ? `${hostname}${pathname}?${queryString}` : `${hostname}${pathname}`;
   } catch {
-    return url.toLowerCase().replace(/[?#].*$/, '');
+    // Fallback for invalid URLs - just lowercase and remove fragments
+    return url.toLowerCase().replace(/#.*$/, '');
   }
 }
 
@@ -289,7 +308,7 @@ export async function fetchAllCategories(
     }
   }
   
-  // Process each category
+  // Process each category (filter by date, dedupe within category, score and sort)
   const processCategory = (articles: NewsArticle[]): NewsArticle[] => {
     let filtered = filterByDate(articles, fromDate);
     filtered = deduplicateByUrl(filtered);
@@ -311,6 +330,22 @@ export async function fetchAllCategories(
     'sf-local': processCategory(combined['sf-local']),
   };
   
+  // Cross-category deduplication: remove articles that appear in multiple categories
+  // Priority order: sf-local > politics > economy > tech (local news gets priority)
+  const seenUrls = new Set<string>();
+  const categoryOrder: (keyof typeof result)[] = ['sf-local', 'politics', 'economy', 'tech'];
+  
+  for (const category of categoryOrder) {
+    result[category] = result[category].filter(article => {
+      const normalizedUrl = normalizeUrlForDedup(article.url);
+      if (seenUrls.has(normalizedUrl)) {
+        return false; // Already seen in a higher-priority category
+      }
+      seenUrls.add(normalizedUrl);
+      return true;
+    });
+  }
+  
   console.log('\n📊 Final article counts:');
   console.log(`  Tech: ${result.tech.length}`);
   console.log(`  Politics: ${result.politics.length}`);
@@ -318,6 +353,29 @@ export async function fetchAllCategories(
   console.log(`  SF-Local: ${result['sf-local'].length}`);
   
   return result;
+}
+
+/**
+ * Helper for cross-category deduplication (uses same logic as normalizeUrl)
+ */
+function normalizeUrlForDedup(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const trackingParams = [
+      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+      'ref', 'source', 'fbclid', 'gclid', 'mc_cid', 'mc_eid',
+    ];
+    for (const param of trackingParams) {
+      parsed.searchParams.delete(param);
+    }
+    parsed.searchParams.sort();
+    const hostname = parsed.hostname.replace(/^www\./, '');
+    const pathname = parsed.pathname.replace(/\/$/, '');
+    const queryString = parsed.searchParams.toString();
+    return queryString ? `${hostname}${pathname}?${queryString}` : `${hostname}${pathname}`;
+  } catch {
+    return url.toLowerCase().replace(/#.*$/, '');
+  }
 }
 
 // Re-export individual source functions for testing/debugging
