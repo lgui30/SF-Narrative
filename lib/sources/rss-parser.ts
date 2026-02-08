@@ -71,11 +71,23 @@ const CATEGORY_KEYWORDS: Record<string, 'tech' | 'politics' | 'economy' | 'sf-lo
 /**
  * Parse a single RSS feed
  */
+async function fetchWithRetry(url: string, options: RequestInit): Promise<Response> {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response;
+  } catch (error) {
+    console.warn(`⚠️ Fetch failed for ${url}, retrying in 1s...`, error instanceof Error ? error.message : error);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return fetch(url, options);
+  }
+}
+
 async function parseFeed(config: RSSFeedConfig): Promise<NewsArticle[]> {
   try {
     console.log(`📡 Fetching RSS feed: ${config.name}...`);
     
-    const response = await fetch(config.url, {
+    const response = await fetchWithRetry(config.url, {
       headers: {
         'User-Agent': 'SF-Narrative/1.0',
         'Accept': 'application/rss+xml, application/xml, text/xml',

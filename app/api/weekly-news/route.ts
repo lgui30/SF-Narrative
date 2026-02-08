@@ -17,13 +17,21 @@ export async function GET(request: NextRequest) {
     let weeklyNewsRecord;
 
     if (weekOfParam) {
-      // Fetch specific week - find by matching the date part
-      const allWeeks = await prisma.weeklyNews.findMany();
-      const searchDate = weekOfParam.split('T')[0]; // Get YYYY-MM-DD part
-      
-      weeklyNewsRecord = allWeeks.find(week => {
-        const weekDate = week.weekOf.toISOString().split('T')[0];
-        return weekDate === searchDate;
+      // Validate weekOf is a valid date string
+      const parsedDate = new Date(weekOfParam);
+      if (isNaN(parsedDate.getTime())) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Invalid weekOf parameter. Must be a valid date string (e.g., 2025-01-06).',
+          },
+          { status: 400 }
+        );
+      }
+
+      // Fetch specific week directly by date
+      weeklyNewsRecord = await prisma.weeklyNews.findFirst({
+        where: { weekOf: parsedDate },
       });
     } else {
       // Fetch latest week
