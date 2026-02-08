@@ -11,6 +11,24 @@ interface NewsCardProps {
   onHashtagClick?: (keyword: string) => void;
 }
 
+function formatRelativeTime(dateString: string): string {
+  const now = Date.now();
+  const then = new Date(dateString).getTime();
+  if (isNaN(then)) return '';
+  const seconds = Math.floor((now - then) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+  const months = Math.floor(days / 30);
+  return `${months} month${months !== 1 ? 's' : ''} ago`;
+}
+
 const CATEGORY_STYLES = {
   tech: {
     badge: 'bg-blue-100 text-blue-800 border-blue-300',
@@ -143,7 +161,12 @@ export default function NewsCard({ news, onAskAI, isHighlighted, onHashtagClick 
                         <ExternalLink className="w-3 h-3 mt-1 flex-shrink-0" />
                         <div className="flex-1">
                           <div className="font-bold">{source.title || 'Untitled'}</div>
-                          <div className="text-xs text-gray-500">{source.source || 'Unknown source'}</div>
+                          <div className="text-xs text-gray-500">
+                            {source.source || 'Unknown source'}
+                            {source.publishedDate && formatRelativeTime(source.publishedDate) && (
+                              <> · {formatRelativeTime(source.publishedDate)}</>
+                            )}
+                          </div>
                         </div>
                       </a>
                     ) : (
@@ -154,7 +177,12 @@ export default function NewsCard({ news, onAskAI, isHighlighted, onHashtagClick 
                         <ExternalLink className="w-3 h-3 mt-1 flex-shrink-0 opacity-50" />
                         <div className="flex-1">
                           <div className="font-bold">{source.title || 'Untitled'}</div>
-                          <div className="text-xs text-gray-500">{source.source || 'Unknown source'}</div>
+                          <div className="text-xs text-gray-500">
+                            {source.source || 'Unknown source'}
+                            {source.publishedDate && formatRelativeTime(source.publishedDate) && (
+                              <> · {formatRelativeTime(source.publishedDate)}</>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )

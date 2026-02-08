@@ -135,9 +135,9 @@ What would you like to know?`
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-auto">
       <div className={`bg-white border-2 ${categoryColors[news.category]} shadow-2xl transition-all duration-300 ${
-        isMinimized ? 'w-80 h-14' : 'w-96 h-[600px]'
+        isMinimized ? 'w-80 h-14 ml-auto' : 'w-full h-screen sm:w-96 sm:h-[600px]'
       } flex flex-col`}>
         {/* Header */}
         <div 
@@ -171,10 +171,10 @@ What would you like to know?`
                 e.stopPropagation();
                 onClose();
               }}
-              className="hover:bg-white/50 p-1 transition-colors"
+              className="hover:bg-white/50 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
               title="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -191,7 +191,7 @@ What would you like to know?`
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
               {messages.map((message, index) => (
                 <div
                   key={index}
@@ -256,7 +256,7 @@ What would you like to know?`
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Ask about this news..."
-                  className="flex-1 px-3 py-2 border border-gray-300 font-mono text-xs focus:outline-none focus:border-black"
+                  className="flex-1 px-3 py-2 border border-gray-300 font-mono text-base sm:text-xs focus:outline-none focus:border-black"
                   disabled={isLoading}
                 />
                 <button
