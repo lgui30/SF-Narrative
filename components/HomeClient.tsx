@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import NewsCard from '@/components/ui/NewsCard';
+import SkeletonCard from '@/components/ui/SkeletonCard';
 import NewsQAModal from '@/components/ui/NewsQAModal';
 import WeekSelector from '@/components/ui/WeekSelector';
 import ViewToggleButton from '@/components/ui/ViewToggleButton';
@@ -25,7 +26,17 @@ export default function HomeClient({ weeklyNews: initialWeeklyNews, error: initi
   const [qaModalOpen, setQaModalOpen] = useState(false);
   const [selectedNews, setSelectedNews] = useState<CategoryNews | null>(null);
   const [availableWeeks, setAvailableWeeks] = useState<{ weekOf: Date; label: string }[]>([]);
-  const [selectedWeek, setSelectedWeek] = useState<Date | null>(initialWeeklyNews?.weekOf || null);
+  const [selectedWeek, setSelectedWeek] = useState<Date | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const weekParam = params.get('week');
+      if (weekParam && /^\d{4}-\d{2}-\d{2}$/.test(weekParam)) {
+        const parsed = new Date(weekParam + 'T00:00:00');
+        if (!isNaN(parsed.getTime())) return parsed;
+      }
+    }
+    return initialWeeklyNews?.weekOf || null;
+  });
   const [weeklyNews, setWeeklyNews] = useState<WeeklyNews | null>(initialWeeklyNews);
   const [error, setError] = useState<string | null>(initialError);
   const [isLoadingWeek, setIsLoadingWeek] = useState(false);
@@ -148,6 +159,12 @@ export default function HomeClient({ weeklyNews: initialWeeklyNews, error: initi
   useEffect(() => {
     if (!selectedWeek) return;
 
+    // Sync URL query param
+    const weekStr = selectedWeek.toISOString().split('T')[0];
+    const url = new URL(window.location.href);
+    url.searchParams.set('week', weekStr);
+    window.history.replaceState({}, '', url.toString());
+
     // Capture selectedWeek value for use in async function
     const weekToFetch = selectedWeek;
 
@@ -206,17 +223,25 @@ export default function HomeClient({ weeklyNews: initialWeeklyNews, error: initi
 
               {/* Loading State */}
               {isLoadingWeek ? (
-                <div className="text-center py-16 border border-gray-300">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
-                  <p className="text-lg font-mono text-gray-600">
-                    Loading news...
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
                 </div>
               ) : error ? (
                 <div className="text-center py-16 border border-gray-300">
-                  <p className="text-lg font-mono text-red-500">
+                  <p className="text-lg font-mono text-red-500 mb-4">
                     Error loading news: {error}
                   </p>
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      setSelectedWeek(prev => prev ? new Date(prev.getTime()) : prev);
+                    }}
+                    className="px-6 py-2 border border-gray-300 bg-white hover:bg-gray-50 transition-colors font-mono text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    Try Again
+                  </button>
                 </div>
               ) : !weeklyNews ? (
                 <div className="text-center py-16 border border-gray-300">
