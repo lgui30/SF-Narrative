@@ -1,0 +1,116 @@
+[
+  {
+    "name": "Trailing slash deduplication",
+    "passed": true
+  },
+  {
+    "name": "WWW prefix deduplication",
+    "passed": true
+  },
+  {
+    "name": "UTM parameter deduplication",
+    "passed": true
+  },
+  {
+    "name": "Invalid URL handling",
+    "passed": true,
+    "details": "Handled gracefully"
+  },
+  {
+    "name": "Empty array deduplication",
+    "passed": true
+  },
+  {
+    "name": "Non-UTM query params preserved",
+    "passed": false,
+    "error": "Expected 2 (different pages), got 1"
+  },
+  {
+    "name": "Empty article scoring",
+    "passed": true,
+    "details": "Score: 0"
+  },
+  {
+    "name": "Invalid date scoring",
+    "passed": true,
+    "details": "Score: 10"
+  },
+  {
+    "name": "Future date scoring",
+    "passed": true,
+    "details": "Score: 20"
+  },
+  {
+    "name": "Multiple neighborhood scoring",
+    "passed": true,
+    "details": "Score: 30 (expected > 20)"
+  },
+  {
+    "name": "Date format: 2025-01-15",
+    "passed": true
+  },
+  {
+    "name": "Date format: 2025-01-15T12:00:00Z",
+    "passed": true
+  },
+  {
+    "name": "Date format: 2025-01-15T12:00:00.000Z",
+    "passed": true
+  },
+  {
+    "name": "Date format: Wed, 15 Jan 2025 12:00:00 GMT",
+    "passed": true
+  },
+  {
+    "name": "Date format: January 15, 2025",
+    "passed": true
+  },
+  {
+    "name": "RSS feeds fetch",
+    "passed": true,
+    "details": "Got 30 total articles"
+  },
+  {
+    "name": "RSS articles have required fields",
+    "passed": true
+  },
+  {
+    "name": "Reddit API fetch",
+    "passed": true,
+    "details": "Got 49 total posts"
+  },
+  {
+    "name": "Reddit rate limit handling",
+    "passed": true,
+    "details": "Uses 500ms delay between subreddits"
+  },
+  {
+    "name": "Hacker News API fetch",
+    "passed": true,
+    "details": "Got 14 SF-relevant articles"
+  },
+  {
+    "name": "TheNewsAPI fetch",
+    "passed": true,
+    "details": "No API key configured (expected behavior)"
+  },
+  {
+    "name": "Combined source fetch",
+    "passed": true,
+    "details": "{\"tech\":5,\"politics\":2,\"economy\":5,\"sf-local\":5}"
+  },
+  {
+    "name": "No duplicate URLs across categories",
+    "passed": false,
+    "error": "Found 1 duplicates"
+  },
+  {
+    "name": "Future date returns empty arrays",
+    "passed": true
+  },
+  {
+    "name": "Error handling in source clients",
+    "passed": true,
+    "details": "All clients return [] on error"
+  }
+]

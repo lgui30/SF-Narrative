@@ -87,12 +87,12 @@ export default function NewsCard({ news, onAskAI, isHighlighted, onHashtagClick 
       <div className="p-6">
         {/* Short summary - always visible */}
         <p className="text-sm font-mono text-gray-800 leading-relaxed mb-4">
-          {news.summaryShort}
+          {news.summaryShort || 'No summary available.'}
         </p>
 
         {/* Expanded content */}
         {isExpanded && (
-          <div className="mt-6 space-y-6 border-t border-gray-200 pt-6">
+          <div id={`news-${news.category}-details`} className="mt-6 space-y-6 border-t border-gray-200 pt-6">
             {/* Detailed narrative */}
             <div>
               <h4 className="text-xs font-mono font-bold text-gray-500 uppercase mb-3">
@@ -132,19 +132,32 @@ export default function NewsCard({ news, onAskAI, isHighlighted, onHashtagClick 
                 </h4>
                 <div className="space-y-2">
                   {news.sources.slice(0, 5).map((source, index) => (
-                    <a
-                      key={index}
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-start gap-2 text-sm font-mono text-blue-600 hover:text-blue-800 hover:underline group"
-                    >
-                      <ExternalLink className="w-3 h-3 mt-1 flex-shrink-0" />
-                      <div className="flex-1">
-                        <div className="font-bold">{source.title}</div>
-                        <div className="text-xs text-gray-500">{source.source}</div>
+                    source.url ? (
+                      <a
+                        key={index}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-2 text-sm font-mono text-blue-600 hover:text-blue-800 hover:underline group"
+                      >
+                        <ExternalLink className="w-3 h-3 mt-1 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="font-bold">{source.title || 'Untitled'}</div>
+                          <div className="text-xs text-gray-500">{source.source || 'Unknown source'}</div>
+                        </div>
+                      </a>
+                    ) : (
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 text-sm font-mono text-gray-600"
+                      >
+                        <ExternalLink className="w-3 h-3 mt-1 flex-shrink-0 opacity-50" />
+                        <div className="flex-1">
+                          <div className="font-bold">{source.title || 'Untitled'}</div>
+                          <div className="text-xs text-gray-500">{source.source || 'Unknown source'}</div>
+                        </div>
                       </div>
-                    </a>
+                    )
                   ))}
                 </div>
               </div>
@@ -153,29 +166,32 @@ export default function NewsCard({ news, onAskAI, isHighlighted, onHashtagClick 
         )}
 
         {/* Action buttons */}
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex gap-2" role="group" aria-label="Card actions">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 transition-colors font-mono text-sm font-bold"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 transition-colors font-mono text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-expanded={isExpanded}
+            aria-controls={`news-${news.category}-details`}
           >
             {isExpanded ? (
               <>
-                <ChevronUp className="w-4 h-4" />
+                <ChevronUp className="w-4 h-4" aria-hidden="true" />
                 Show Less
               </>
             ) : (
               <>
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-4 h-4" aria-hidden="true" />
                 Read More
               </>
             )}
           </button>
           <button
             onClick={onAskAI}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 transition-colors font-mono text-sm font-bold"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 transition-colors font-mono text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             title="Ask AI about this news"
+            aria-label={`Ask AI about ${styles.label} news`}
           >
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-4 h-4" aria-hidden="true" />
             Ask AI
           </button>
         </div>

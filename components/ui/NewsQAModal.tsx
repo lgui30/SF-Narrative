@@ -80,6 +80,10 @@ What would you like to know?`
     setIsLoading(true);
 
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('/api/news-qa', {
         method: 'POST',
         headers: {
@@ -90,8 +94,11 @@ What would you like to know?`
           news,
           weekOf,
           conversationHistory: messages,
-        })
+        }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -106,9 +113,12 @@ What would you like to know?`
       }
     } catch (error) {
       console.error('News QA error:', error);
+      const errorMessage = error instanceof Error && error.name === 'AbortError'
+        ? 'The request timed out. Please try a shorter question or try again later.'
+        : 'Sorry, I encountered an error processing your question. Please try again.';
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Sorry, I encountered an error processing your question. Please try again.' 
+        content: errorMessage
       }]);
     } finally {
       setIsLoading(false);

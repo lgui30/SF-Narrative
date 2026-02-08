@@ -34,16 +34,24 @@ export default function HomeClient({ weeklyNews: initialWeeklyNews, error: initi
 
   // Load view preference from localStorage on mount
   useEffect(() => {
-    const savedView = localStorage.getItem(VIEW_PREFERENCE_KEY);
-    if (savedView === 'cards' || savedView === 'map') {
-      setCurrentView(savedView);
+    try {
+      const savedView = localStorage.getItem(VIEW_PREFERENCE_KEY);
+      if (savedView === 'cards' || savedView === 'map') {
+        setCurrentView(savedView);
+      }
+    } catch {
+      // localStorage unavailable (SSR, private browsing, etc.) - use default
     }
   }, []);
 
   // Handle view toggle and persist to localStorage
   const handleViewToggle = (view: 'cards' | 'map') => {
     setCurrentView(view);
-    localStorage.setItem(VIEW_PREFERENCE_KEY, view);
+    try {
+      localStorage.setItem(VIEW_PREFERENCE_KEY, view);
+    } catch {
+      // localStorage unavailable - preference won't persist
+    }
   };
 
   // Format week date for display
