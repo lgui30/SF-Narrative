@@ -22,8 +22,7 @@
   },
   {
     "name": "Non-UTM query params preserved",
-    "passed": false,
-    "error": "Expected 2 (different pages), got 1"
+    "passed": true
   },
   {
     "name": "Empty article scoring",
@@ -38,12 +37,12 @@
   {
     "name": "Future date scoring",
     "passed": true,
-    "details": "Score: 20"
+    "details": "Score: 10"
   },
   {
     "name": "Multiple neighborhood scoring",
     "passed": true,
-    "details": "Score: 30 (expected > 20)"
+    "details": "Score: 20 (expected >= 20)"
   },
   {
     "name": "Date format: 2025-01-15",
@@ -97,12 +96,11 @@
   {
     "name": "Combined source fetch",
     "passed": true,
-    "details": "{\"tech\":5,\"politics\":2,\"economy\":5,\"sf-local\":5}"
+    "details": "{\"tech\":4,\"politics\":2,\"economy\":5,\"sf-local\":5}"
   },
   {
     "name": "No duplicate URLs across categories",
-    "passed": false,
-    "error": "Found 1 duplicates"
+    "passed": true
   },
   {
     "name": "Future date returns empty arrays",
