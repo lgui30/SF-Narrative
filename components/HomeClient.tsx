@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import NewsCard from '@/components/ui/NewsCard';
 import NewsQAModal from '@/components/ui/NewsQAModal';
 import WeekSelector from '@/components/ui/WeekSelector';
+import ViewToggleButton from '@/components/ui/ViewToggleButton';
 import MapView from '@/components/map/MapView';
 import type { WeeklyNews, CategoryNews } from '@/lib/types';
+
+const VIEW_PREFERENCE_KEY = 'sf-narrative-view-preference';
 
 interface HomeClientProps {
   weeklyNews: WeeklyNews | null;
@@ -27,6 +30,21 @@ export default function HomeClient({ weeklyNews: initialWeeklyNews, error: initi
   const [error, setError] = useState<string | null>(initialError);
   const [isLoadingWeek, setIsLoadingWeek] = useState(false);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'cards' | 'map'>('cards');
+
+  // Load view preference from localStorage on mount
+  useEffect(() => {
+    const savedView = localStorage.getItem(VIEW_PREFERENCE_KEY);
+    if (savedView === 'cards' || savedView === 'map') {
+      setCurrentView(savedView);
+    }
+  }, []);
+
+  // Handle view toggle and persist to localStorage
+  const handleViewToggle = (view: 'cards' | 'map') => {
+    setCurrentView(view);
+    localStorage.setItem(VIEW_PREFERENCE_KEY, view);
+  };
 
   // Format week date for display
   const formatWeekDate = (date: Date) => {
@@ -221,12 +239,49 @@ export default function HomeClient({ weeklyNews: initialWeeklyNews, error: initi
                     )}
                   </div>
 
-                  {/* Interactive Map */}
-                  <MapView
-                    weeklyNews={weeklyNews}
-                    selectedNeighborhood={selectedNeighborhood}
-                    onNeighborhoodSelect={setSelectedNeighborhood}
-                  />
+                  {/* View Toggle */}
+                  <div className="mb-8">
+                    <ViewToggleButton
+                      currentView={currentView}
+                      onToggle={handleViewToggle}
+                    />
+                  </div>
+
+                  {/* Conditional View: Cards or Map */}
+                  {currentView === 'cards' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <NewsCard
+                        news={weeklyNews.tech}
+                        onAskAI={() => handleAskAI(weeklyNews.tech)}
+                        isHighlighted={highlightedCategory === 'tech'}
+                        onHashtagClick={handleHashtagClick}
+                      />
+                      <NewsCard
+                        news={weeklyNews.politics}
+                        onAskAI={() => handleAskAI(weeklyNews.politics)}
+                        isHighlighted={highlightedCategory === 'politics'}
+                        onHashtagClick={handleHashtagClick}
+                      />
+                      <NewsCard
+                        news={weeklyNews.economy}
+                        onAskAI={() => handleAskAI(weeklyNews.economy)}
+                        isHighlighted={highlightedCategory === 'economy'}
+                        onHashtagClick={handleHashtagClick}
+                      />
+                      <NewsCard
+                        news={weeklyNews.sfLocal}
+                        onAskAI={() => handleAskAI(weeklyNews.sfLocal)}
+                        isHighlighted={highlightedCategory === 'sf-local'}
+                        onHashtagClick={handleHashtagClick}
+                      />
+                    </div>
+                  ) : (
+                    <MapView
+                      weeklyNews={weeklyNews}
+                      selectedNeighborhood={selectedNeighborhood}
+                      onNeighborhoodSelect={setSelectedNeighborhood}
+                    />
+                  )}
                 </>
               )}
             </>
