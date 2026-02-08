@@ -144,11 +144,14 @@ export default function MapView({ weeklyNews, selectedNeighborhood, onNeighborho
   }
 
   // Get articles for selected neighborhood
-  const selectedNeighborhoodArticles = selectedNeighborhood && neighborhoodData.get(selectedNeighborhood);
+  const selectedNeighborhoodArticles: NeighborhoodData | undefined = selectedNeighborhood
+    ? neighborhoodData.get(selectedNeighborhood)
+    : undefined;
 
   // Filter articles by selected category
-  const filteredArticles = selectedNeighborhoodArticles?.articles.filter(({ category }) =>
-    selectedCategory === 'all' || category === selectedCategory
+  const filteredArticles = selectedNeighborhoodArticles?.articles.filter(
+    (item: { article: NewsArticle; category: string }) =>
+      selectedCategory === 'all' || item.category === selectedCategory
   ) || [];
 
   return (
@@ -247,7 +250,7 @@ export default function MapView({ weeklyNews, selectedNeighborhood, onNeighborho
                   No articles in this category
                 </p>
               ) : (
-                filteredArticles.map(({ article, category }, index) => (
+                filteredArticles.map(({ article, category }: { article: NewsArticle; category: string }, index: number) => (
                 <div key={index} className="border-b border-gray-200 pb-3 last:border-0">
                   <div className="flex items-start gap-3">
                     <span className={`text-xs font-mono px-2 py-1 ${
